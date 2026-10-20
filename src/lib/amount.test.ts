@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+// TypeScript 6 no longer auto-includes global @types packages, so the Jest globals are referenced here.
 import {
   checkClaimAmount,
   formatAmountDisplay,
