@@ -84,6 +84,8 @@ export default function Home() {
         <AssetRow key={item.asset} item={item} blocked={claims.some((c) => blocksAsset(c, item.asset))} />
       ))}
 
+      <Button title="Activity" variant="secondary" onPress={() => router.push("/activity")} />
+
       <Text style={styles.footnote}>
         Totals include pending payback, which is not confirmed yet and can still be reversed by the exchange.
       </Text>
