@@ -2,7 +2,7 @@
 
 Expo (React Native, TypeScript) app delivered as a web app, designed for a ~390 px phone screen.
 
-- Live: _link_
+- Live: https://cashmine-test-task.expo.app
 - Decisions and known issues: [`NOTES.md`](NOTES.md)
 - AI conversations: [`ai-logs/`](ai-logs/)
 
