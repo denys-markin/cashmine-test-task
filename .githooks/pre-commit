@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Blocks commits that would publish the API token or any other value from local .env files.
+set -euo pipefail
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+if printf '%s\n' "$staged_files" | grep -E '(^|/)\.env($|\.)' | grep -v -E '\.env\.example$' >/dev/null; then
+  echo "pre-commit: refusing to commit an .env file." >&2
+  exit 1
+fi
+
+staged_diff=$(git diff --cached -U0 --no-color)
+
+for env_file in .env .env.local .env.development.local .env.production.local; do
+  [ -f "$env_file" ] || continue
+  while IFS='=' read -r key value || [ -n "$key" ]; do
+    case "$key" in ''|\#*) continue ;; esac
+    value="${value%\"}"; value="${value#\"}"; value="${value%\'}"; value="${value#\'}"
+    value="${value#*: }"   # API_AUTH_HEADER=Name: <token> -> <token>
+    [ "${#value}" -ge 8 ] || continue
+    if printf '%s' "$staged_diff" | grep -F -q -- "$value"; then
+      echo "pre-commit: staged changes contain the value of $key from $env_file. Commit blocked." >&2
+      exit 1
+    fi
+  done < "$env_file"
+done
+
+if printf '%s' "$staged_diff" | grep -E -q '^\+.*(Bearer [A-Za-z0-9._~+/=-]{20,}|(api[_-]?key|token|secret)["'"'"']? *[:=] *["'"'"'][A-Za-z0-9._~+/=-]{20,}["'"'"'])'; then
+  echo "pre-commit: this looks like a hard-coded token. Commit blocked." >&2
+  echo "If it is a false positive, check the diff and commit with --no-verify." >&2
+  exit 1
+fi
