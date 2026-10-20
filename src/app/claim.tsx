@@ -61,11 +61,16 @@ function parseOptions(options: ClaimOptions, decimals: number) {
 }
 
 export default function ClaimScreen() {
-  const params = useLocalSearchParams<{ asset?: string; amount?: string }>();
+  const { asset, amount } = useLocalSearchParams<{ asset?: string; amount?: string }>();
+  // New params (e.g. "Edit amount" popping back to this screen) start a fresh form.
+  return <ClaimForm key={`${asset ?? ""}:${amount ?? ""}`} initialAsset={asset} initialAmount={amount} />;
+}
+
+function ClaimForm({ initialAsset, initialAmount }: { initialAsset?: string; initialAmount?: string }) {
   const { data, error: balancesError, loading: balancesLoading, refresh } = useBalances();
   const { claims, submit } = useClaims();
-  const [asset, setAsset] = useState<string | null>(params.asset ?? null);
-  const [input, setInput] = useState(params.amount ?? "");
+  const [asset, setAsset] = useState<string | null>(initialAsset ?? null);
+  const [input, setInput] = useState(initialAmount ?? "");
   const [destinationId, setDestinationId] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [submitting, setSubmitting] = useState(false);

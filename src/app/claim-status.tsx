@@ -7,10 +7,9 @@ import { claimAmountText, describeClaim } from "@/features/claim/describeClaim";
 import { Button } from "@/ui/Button";
 import { colors, space } from "@/ui/theme";
 
-function goHome() {
-  if (router.canGoBack()) router.back();
-  else router.replace("/");
-}
+// Go back to the Home that is already in the stack instead of stacking a second one. dismissTo pops to the
+// existing route; only when there is none (a direct load of this screen) does it replace this screen.
+const goHome = () => router.dismissTo("/");
 
 export default function ClaimStatusScreen() {
   const { key } = useLocalSearchParams<{ key: string }>();
@@ -21,7 +20,7 @@ export default function ClaimStatusScreen() {
     return (
       <View style={styles.content}>
         <Text style={styles.detail}>This claim is no longer tracked on this device. Check Activity for its status.</Text>
-        <Button title="Back to balances" onPress={() => router.replace("/")} />
+        <Button title="Back to balances" onPress={goHome} />
       </View>
     );
   }
@@ -53,11 +52,21 @@ export default function ClaimStatusScreen() {
           title="Edit amount"
           onPress={() => {
             dismiss(item.key);
-            router.replace({ pathname: "/claim", params: { asset: item.body.asset, amount: item.body.amount } });
+            // Reuses a claim form already below this screen (it re-initialises from the new params).
+            router.dismissTo({ pathname: "/claim", params: { asset: item.body.asset, amount: item.body.amount } });
           }}
         />
       )}
-      {item.phase === "error" && <Button title="Dismiss" variant="secondary" onPress={() => dismiss(item.key)} />}
+      {item.phase === "error" && (
+        <Button
+          title="Dismiss"
+          variant="secondary"
+          onPress={() => {
+            dismiss(item.key);
+            goHome();
+          }}
+        />
+      )}
       <Button title="Back to balances" variant="secondary" onPress={goHome} />
     </ScrollView>
   );
