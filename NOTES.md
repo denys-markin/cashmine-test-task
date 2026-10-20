@@ -32,14 +32,15 @@ guess). *Seen live:* a real 504; the resend returned the original claim, and the
 ## Working with AI (search `ai-logs/` for the quoted phrase)
 
 1. **A prompt that missed.** The first plan took ~2 h for a ~1 h 35 slot, so I re-scoped it. I merged
-   steps, moved tests next to `amount.ts`, added checkpoints and tied claim state to the token. ("We're
-   over budget")
+   steps, moved tests next to `amount.ts`, added checkpoints and tied claim state to the token. I worked
+   out the re-scoping in a second Claude chat (`ai-logs/claude-chat-*.md`). ("We're over budget")
 2. **Wrong or risky output.** Two taps in one frame could submit with two different keys, which is two
    real claims. The AI caught this in its own review and fixed it ("Double-tap race"). It also chained
-   `tsc ; … ; git commit`, so a commit that failed the type check landed (`9406882`). I caught that one
-   in the output.
+   `tsc ; … ; git commit`, so a commit that failed the type check landed (`9406882`). It reported this
+   itself in its next step and added a fix commit (`5529826`).
 3. **Pushing back.** I accepted its proposals for decisions 2 and 3 but changed four things: a strict
    timestamp comparison, no local change for failed claims, no retry on 409, and a cap of 3 resends.
+   Before replying, I went through its options in a second Claude chat (`ai-logs/claude-chat-*.md`).
    ("C and A, with tweaks")
 
 ## Not done / known issues
