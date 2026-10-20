@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { ClaimsProvider } from "@/features/claim/ClaimsProvider";
 import { TokenProvider, useSession } from "@/features/token/TokenProvider";
 import { colors, MAX_CONTENT_WIDTH } from "@/ui/theme";
 
@@ -9,7 +10,9 @@ export default function RootLayout() {
     <View style={styles.page}>
       <View style={styles.app}>
         <TokenProvider>
-          <AppStack />
+          <ClaimsProvider>
+            <AppStack />
+          </ClaimsProvider>
         </TokenProvider>
       </View>
     </View>
@@ -31,6 +34,7 @@ function AppStack() {
     >
       <Stack.Screen name="index" options={{ title: "Payback" }} />
       <Stack.Screen name="claim" options={{ title: "Claim" }} />
+      <Stack.Screen name="claim-status" options={{ title: "Claim status" }} />
     </Stack>
   );
 }

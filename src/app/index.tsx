@@ -1,8 +1,13 @@
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { describeError } from "@/api/describeError";
-import { assetTotal, useBalances, usdTotals, type AssetBalance } from "@/features/balances/useBalances";
+import { assetTotal, usdTotals, type AssetBalance } from "@/features/balances/model";
+import { useBalances } from "@/features/balances/useBalances";
+import { ClaimBanner } from "@/features/claim/ClaimBanner";
+import { useClaims } from "@/features/claim/ClaimsProvider";
+import { blocksAsset, isActive } from "@/features/claim/overlay";
 import { formatAmountDisplay, formatUsd, totalUsdCents } from "@/lib/amount";
 import { formatAge, useNow } from "@/lib/useNow";
 import { Button } from "@/ui/Button";
@@ -11,10 +16,31 @@ import { colors, space } from "@/ui/theme";
 
 // Snapshots are recomputed every ~15 s; older than this and we say so.
 const STALE_AFTER_MS = 60_000;
+// While one of the user's claims is in flight, check for a fresh snapshot this often.
+const LIVE_REFRESH_MS = 5_000;
 
 export default function Home() {
   const { data, error, loading, refresh } = useBalances();
+  const { claims } = useClaims();
   const now = useNow();
+  const active = data ? claims.filter((c) => isActive(c, data.asOf)) : [];
+  // Poll only while something is moving; "unknown" and "error" claims wait for the user.
+  const live = active.some((c) => c.claim !== null || c.phase === "sending" || c.phase === "confirming");
+
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => void refresh(), LIVE_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [live, refresh]);
+
+  // A failed claim returns its amount to available: drop its overlay (overlay.ts) and refetch right away.
+  const failedKeys = claims
+    .filter((c) => c.claim?.status === "failed")
+    .map((c) => c.key)
+    .join();
+  useEffect(() => {
+    if (failedKeys) void refresh();
+  }, [failedKeys, refresh]);
 
   if (!data) {
     return (
@@ -50,8 +76,12 @@ export default function Home() {
 
       {error != null && <ErrorBanner message={`Couldn't refresh. ${describeError(error)}`} onRetry={refresh} retrying={loading} />}
 
+      {active.map((c) => (
+        <ClaimBanner key={c.key} item={c} />
+      ))}
+
       {data.items.map((item) => (
-        <AssetRow key={item.asset} item={item} />
+        <AssetRow key={item.asset} item={item} blocked={claims.some((c) => blocksAsset(c, item.asset))} />
       ))}
 
       <Text style={styles.footnote}>
@@ -61,7 +91,7 @@ export default function Home() {
   );
 }
 
-function AssetRow({ item }: { item: AssetBalance }) {
+function AssetRow({ item, blocked }: { item: AssetBalance; blocked: boolean }) {
   const amount = (units: bigint) => `${formatAmountDisplay(units, item.decimals)} ${item.asset}`;
   const usd = totalUsdCents([{ units: assetTotal(item), decimals: item.decimals, usdPrice: item.usdPrice }]);
   return (
@@ -75,11 +105,11 @@ function AssetRow({ item }: { item: AssetBalance }) {
       <Line label="Claiming" value={amount(item.claiming)} />
       <Pressable
         accessibilityRole="button"
-        disabled={item.available === 0n}
+        disabled={item.available === 0n || blocked}
         onPress={() => router.push({ pathname: "/claim", params: { asset: item.asset } })}
-        style={({ pressed }) => [styles.claim, item.available === 0n && styles.disabled, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.claim, (item.available === 0n || blocked) && styles.disabled, pressed && styles.pressed]}
       >
-        <Text style={styles.claimText}>Claim {item.asset}</Text>
+        <Text style={styles.claimText}>{blocked ? "Waiting for previous claim" : `Claim ${item.asset}`}</Text>
       </Pressable>
     </View>
   );

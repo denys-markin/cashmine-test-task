@@ -3,13 +3,13 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button } from "./Button";
 import { colors, space } from "./theme";
 
-type Props = { message: string; onRetry?: () => void; retrying?: boolean };
+type Props = { message: string; onRetry?: () => void; retrying?: boolean; actionLabel?: string };
 
-export function ErrorBanner({ message, onRetry, retrying }: Props) {
+export function ErrorBanner({ message, onRetry, retrying, actionLabel = "Retry" }: Props) {
   return (
     <View style={styles.box} accessibilityRole="alert">
       <Text style={styles.text}>{message}</Text>
-      {onRetry && <Button title="Retry" variant="secondary" onPress={onRetry} loading={retrying} />}
+      {onRetry && <Button title={actionLabel} variant="secondary" onPress={onRetry} loading={retrying} />}
     </View>
   );
 }
