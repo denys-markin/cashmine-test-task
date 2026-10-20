@@ -50,3 +50,7 @@ guess). *Seen live:* a real 504; the resend returned the original claim, and the
   and three failures in a row.
 - Tabs don't share claim state, so two tabs could create two separate claims (never the same one twice).
 - An unknown claim waits for *Check again*; nothing rechecks it automatically.
+- If the browser blocks storage, the claim is still sent without its key being saved. After a reload,
+  an unknown claim would be forgotten and its asset unblocked. Next: refuse to submit when the save fails.
+- A malformed `usdPrice` would crash the screen, because it is parsed during rendering. Next: parse it
+  when balances load, so it shows the error state with Retry instead.
