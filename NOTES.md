@@ -45,7 +45,7 @@ guess). *Seen live:* a real 504; the resend returned the original claim, and the
 
 ## Not done / known issues
 
-- Tested at 390 px in a desktop browser, not on a phone. Light theme only.
+- Checked the live link on a phone: everything works. Light theme only.
 - `ClaimsProvider` has no automated tests. Next: test it against a mocked API covering 504→200, 400, 409
   and three failures in a row.
 - Tabs don't share claim state, so two tabs could create two separate claims (never the same one twice).
