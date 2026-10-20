@@ -9,6 +9,9 @@ Expo (React Native, TypeScript) app delivered as a web app.
 
 ```bash
 yarn install
-cp .env.example .env.local   # fill in API_BASE_URL and API_TOKEN
 npx expo start --web
 ```
+
+On first open the app asks for your API token. It is kept in the browser (`localStorage`) and can be changed from the app.
+
+Optional, for calling the API from a terminal: `cp .env.example .env.local`, fill in the values, then `bash scripts/api.sh GET /v1/balances`.
